@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mozaik Marketing Expenses — Full Analysis</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117; --card: #1a1d27; --border: #2a2d3a;
+    --text: #e4e4e7; --muted: #9ca3af; --accent: #6366f1;
+    --green: #22c55e; --red: #ef4444; --amber: #f59e0b; --cyan: #06b6d4;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, 'Segoe UI', sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+  .container { max-width:1200px; margin:0 auto; padding:24px; }
+  h1 { font-size:28px; font-weight:700; margin-bottom:4px; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:32px; }
+  .grid { display:grid; gap:20px; margin-bottom:24px; }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; }
+  .card h3 { font-size:13px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; }
+  .card .big { font-size:28px; font-weight:700; }
+  .card .small { font-size:12px; color:var(--muted); margin-top:4px; }
+  .chart-card { padding:24px; }
+  .chart-card h2 { font-size:18px; font-weight:600; margin-bottom:16px; }
+  .chart-wrap { position:relative; height:320px; }
+  .insight-card { border-left:3px solid var(--accent); }
+  .insight-card h2 { font-size:18px; font-weight:600; margin-bottom:12px; }
+  .insight { margin-bottom:16px; }
+  .insight .tag { display:inline-block; font-size:11px; font-weight:600; padding:2px 8px; border-radius:4px; margin-bottom:6px; }
+  .tag-red { background:rgba(239,68,68,0.15); color:var(--red); }
+  .tag-green { background:rgba(34,197,94,0.15); color:var(--green); }
+  .tag-amber { background:rgba(245,158,11,0.15); color:var(--amber); }
+  .tag-cyan { background:rgba(6,182,212,0.15); color:var(--cyan); }
+  .insight p { font-size:14px; color:var(--muted); }
+  .insight strong { color:var(--text); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; color:var(--muted); font-weight:500; padding:10px 12px; border-bottom:1px solid var(--border); font-size:12px; text-transform:uppercase; letter-spacing:0.5px; }
+  td { padding:10px 12px; border-bottom:1px solid var(--border); }
+  tr:hover td { background:rgba(99,102,241,0.05); }
+  .bar-cell { display:flex; align-items:center; gap:8px; }
+  .bar { height:6px; border-radius:3px; background:var(--accent); }
+  .num { text-align:right; font-variant-numeric:tabular-nums; }
+  @media (max-width:900px) { .grid-4{grid-template-columns:repeat(2,1fr);} .grid-2,.grid-3{grid-template-columns:1fr;} }
+  @media (max-width:600px) { .grid-4{grid-template-columns:1fr;} }
+  .section-title { font-size:20px; font-weight:700; margin:40px 0 16px; padding-top:16px; border-top:1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Mozaik Marketing Expenses</h1>
+<p class="subtitle">Full-year analysis — 39 line items across 12 months — ₺8.9M total spend</p>
+
+<!-- KPI Cards -->
+<div class="grid grid-4">
+  <div class="card">
+    <h3>Total Annual Spend</h3>
+    <div class="big">₺8.90M</div>
+    <div class="small">39 vendor line items</div>
+  </div>
+  <div class="card">
+    <h3>Monthly Average</h3>
+    <div class="big">₺742K</div>
+    <div class="small">Range: ₺363K – ₺1.38M</div>
+  </div>
+  <div class="card">
+    <h3>Top 2 Vendors</h3>
+    <div class="big">58.6%</div>
+    <div class="small">Doğan Burda + Elmalma</div>
+  </div>
+  <div class="card">
+    <h3>Offline Share</h3>
+    <div class="big">60.3%</div>
+    <div class="small">vs 32% Agency, 7.7% Online</div>
+  </div>
+</div>
+
+<!-- Monthly Trend -->
+<div class="card chart-card">
+  <h2>Monthly Spend Trend</h2>
+  <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+</div>
+
+<!-- Channel + Category side by side -->
+<div class="grid grid-2" style="margin-top:20px;">
+  <div class="card chart-card">
+    <h2>Spend by Channel</h2>
+    <div class="chart-wrap"><canvas id="channelChart"></canvas></div>
+  </div>
+  <div class="card chart-card">
+    <h2>Spend by Category</h2>
+    <div class="chart-wrap"><canvas id="categoryChart"></canvas></div>
+  </div>
+</div>
+
+<!-- Stacked monthly by channel -->
+<div class="card chart-card" style="margin-top:20px;">
+  <h2>Monthly Spend by Channel</h2>
+  <div class="chart-wrap"><canvas id="stackedChart"></canvas></div>
+</div>
+
+<!-- Top Vendors Table -->
+<div class="section-title">Top Vendors by Spend</div>
+<div class="card" style="padding:0; overflow:hidden;">
+<table>
+  <thead><tr><th>Vendor</th><th>Category</th><th>Channel</th><th class="num">Annual Total</th><th style="width:25%">Share</th></tr></thead>
+  <tbody id="vendorTable"></tbody>
+</table>
+</div>
+
+<!-- Key Insights -->
+<div class="section-title">Key Patterns & Insights</div>
+<div class="grid grid-2">
+
+<div class="card insight-card">
+  <h2>1. Extreme Vendor Concentration</h2>
+  <div class="insight">
+    <span class="tag tag-red">High Risk</span>
+    <p><strong>Doğan Burda alone accounts for 36.7%</strong> of all marketing spend (₺3.27M). Combined with Elmalma (₺1.95M), just two vendors consume <strong>58.6%</strong> of the total budget. This creates significant dependency risk — a price increase from either vendor would heavily impact the budget.</p>
+  </div>
+  <div class="insight">
+    <span class="tag tag-amber">Benchmark</span>
+    <p>The remaining 37 line items share just ₺3.69M between them. The top 5 vendors account for <strong>76.2%</strong> of all spend.</p>
+  </div>
+</div>
+
+<div class="card insight-card">
+  <h2>2. Offline Dominance (92.3%)</h2>
+  <div class="insight">
+    <span class="tag tag-amber">Strategic</span>
+    <p>Combining Offline (60.3%) and Agency (32%) — which primarily supports offline channels — <strong>over 92% of spend goes to traditional/offline marketing</strong>. Digital (Google, Facebook, tools) is only 7.7% at ₺689K.</p>
+  </div>
+  <div class="insight">
+    <span class="tag tag-cyan">Opportunity</span>
+    <p>Magazine advertising alone (₺3.94M) is <strong>5.7x larger than all digital advertising combined</strong> (₺689K). Modern benchmarks suggest at least 30-50% digital allocation for most consumer brands.</p>
+  </div>
+</div>
+
+<div class="card insight-card">
+  <h2>3. Strong Seasonal Spikes</h2>
+  <div class="insight">
+    <span class="tag tag-green">Pattern</span>
+    <p>Spending peaks notably in <strong>May (₺928K)</strong>, <strong>July (₺912K)</strong>, <strong>November (₺924K)</strong>, and <strong>December (₺1.38M)</strong>. The December spike is largely driven by PR/gifting expenses (chocolates, food gifts) and year-end magazine buys.</p>
+  </div>
+  <div class="insight">
+    <span class="tag tag-amber">Budget Planning</span>
+    <p>The quietest months are <strong>January (₺363K)</strong> and <strong>August (₺402K)</strong> — roughly half the peak months. This volatility makes budget forecasting harder.</p>
+  </div>
+</div>
+
+<div class="card insight-card">
+  <h2>4. Late-Year Digital Ramp-Up</h2>
+  <div class="insight">
+    <span class="tag tag-cyan">Trend</span>
+    <p>Facebook Ads went from <strong>₺0 for 8 months straight</strong> (Jan–Aug) to suddenly ₺206K in the final 4 months. Google Ads also doubled from Oct onward. This suggests either a strategic shift toward digital or a late push to spend remaining budget.</p>
+  </div>
+  <div class="insight">
+    <span class="tag tag-green">Positive</span>
+    <p>The <strong>Performance Marketing</strong> line (Katapult, ₺180K) also started only in Q4 — indicating an emerging focus on measurable results.</p>
+  </div>
+</div>
+
+<div class="card insight-card">
+  <h2>5. PR/Gifting is a Hidden Cost Center</h2>
+  <div class="insight">
+    <span class="tag tag-amber">Watch</span>
+    <p>Combining PR, PR-Photography, Beverage, and Catering categories totals <strong>₺1.30M (14.6% of budget)</strong>. These are mostly event and gifting costs (chocolates from Divan/240 Derece, wine from Adco Şarap, wooden boxes). Much of this is concentrated in <strong>July and December</strong>.</p>
+  </div>
+  <div class="insight">
+    <span class="tag tag-red">Flag</span>
+    <p>ADCO ŞARAP appears twice — once under Beverage (₺178K) and once under PR (₺145K) — totaling <strong>₺323K from a single wine supplier</strong>. This deserves scrutiny for ROI.</p>
+  </div>
+</div>
+
+<div class="card insight-card">
+  <h2>6. Agency Fee Structure Shift</h2>
+  <div class="insight">
+    <span class="tag tag-green">Pattern</span>
+    <p>Elmalma (website agency) was at a flat <strong>₺175K/month through September</strong>, then dropped to <strong>₺84K/month</strong> from October — a 52% reduction. This may indicate a contract renegotiation, scope change, or agency transition.</p>
+  </div>
+  <div class="insight">
+    <span class="tag tag-cyan">New Additions</span>
+    <p>Meanwhile, <strong>Bir İki Üç</strong> (Creative, ₺718K) and <strong>Katapult</strong> (Performance, ₺180K) were added in Q3/Q4, suggesting the agency roster is being diversified and specialized.</p>
+  </div>
+</div>
+
+</div>
+
+</div>
+
+<script>
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const monthlyTotals = [363483.14,530569.13,597367.96,625736.65,928301.85,647976.82,911582.59,401649.39,769369.34,818627.38,923977.66,1381964.17];
+
+const channelData = {Offline:5364779.31, Agency:2846885.00, Online:688941.77};
+const catData = {Magazine:3942747.87,Website:1949070.00,PR:818002.00,Creative:717815.00,Advertising:536437.38,Catering:184586.26,"Perf. Mktg":180000.00,Beverage:178043.18,"PR-Photo":118000.00,Photography:116800.00,Newsletter:79980.00,Admin:72524.39,Printing:6600.00};
+
+const chMonthly = {
+  Offline:[109810.80,337655.86,397431.60,299407.70,717515.27,334209.60,605158.00,196474.40,394369.70,391442.40,458260.78,1122643.20],
+  Agency:[175200.00,175200.00,175200.00,300215.00,175200.00,295470.00,175200.00,175200.00,323400.00,292200.00,292200.00,292200.00],
+  Online:[49402.34,17703.27,24736.36,26113.95,35586.58,18297.22,31522.59,29974.99,41999.64,123704.98,113356.88,177020.97]
+};
+
+const vendors = [
+  {n:"DOĞAN BURDA",cat:"Magazine",ch:"Offline",t:3266157.87},
+  {n:"ELMALMA",cat:"Website",ch:"Agency",t:1949070.00},
+  {n:"BİR İKİ ÜÇ",cat:"Creative",ch:"Agency",t:717815.00},
+  {n:"TURKUVAZ MEDYA",cat:"Magazine",ch:"Offline",t:532380.00},
+  {n:"Google Ads",cat:"Advertising",ch:"Online",t:330245.91},
+  {n:"DİVAN ÇİKOLATA",cat:"PR",ch:"Offline",t:239798.00},
+  {n:"Facebook Ads",cat:"Advertising",ch:"Online",t:206191.47},
+  {n:"KATAPULT",cat:"Perf. Marketing",ch:"Agency",t:180000.00},
+  {n:"ADCO ŞARAP (Beverage)",cat:"Beverage",ch:"Offline",t:178043.18},
+  {n:"240 DERECE ÇİKOLATA",cat:"PR",ch:"Offline",t:165000.00},
+  {n:"ADCO ŞARAP (PR)",cat:"PR",ch:"Offline",t:145054.00},
+  {n:"ZUHAL VEYSELİ",cat:"Catering",ch:"Offline",t:129100.00},
+  {n:"AHŞAP KUTU",cat:"PR",ch:"Offline",t:93600.00},
+  {n:"NET ATÖLYE",cat:"PR-Photo",ch:"Offline",t:84000.00},
+  {n:"Mailchimp",cat:"Newsletter",ch:"Online",t:79980.00},
+];
+
+const chartColors = { accent:'#6366f1', green:'#22c55e', red:'#ef4444', amber:'#f59e0b', cyan:'#06b6d4', pink:'#ec4899' };
+Chart.defaults.color = '#9ca3af';
+Chart.defaults.borderColor = '#2a2d3a';
+Chart.defaults.font.family = "-apple-system, 'Segoe UI', sans-serif";
+
+// Monthly trend
+new Chart(document.getElementById('monthlyChart'), {
+  type:'bar',
+  data:{
+    labels:months,
+    datasets:[{
+      label:'Monthly Spend (₺)',
+      data:monthlyTotals,
+      backgroundColor: monthlyTotals.map(v => v > 900000 ? '#ef4444aa' : '#6366f1aa'),
+      borderRadius:6, borderSkipped:false
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'₺'+c.raw.toLocaleString('tr-TR',{maximumFractionDigits:0})}}},
+    scales:{y:{ticks:{callback:v=>'₺'+(v/1000000).toFixed(1)+'M'},grid:{color:'#2a2d3a22'}},x:{grid:{display:false}}}
+  }
+});
+
+// Channel donut
+new Chart(document.getElementById('channelChart'), {
+  type:'doughnut',
+  data:{
+    labels:Object.keys(channelData),
+    datasets:[{data:Object.values(channelData), backgroundColor:['#6366f1','#f59e0b','#22c55e'], borderWidth:0, hoverOffset:8}]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false, cutout:'65%',
+    plugins:{legend:{position:'bottom',labels:{padding:16,usePointStyle:true,pointStyle:'circle'}},
+    tooltip:{callbacks:{label:c=>{let v=c.raw;return c.label+': ₺'+(v/1000000).toFixed(2)+'M ('+((v/8900606)*100).toFixed(1)+'%)'}}}}
+  }
+});
+
+// Category bar
+const catKeys=Object.keys(catData), catVals=Object.values(catData);
+const catColors=['#6366f1','#8b5cf6','#ec4899','#f59e0b','#22c55e','#06b6d4','#14b8a6','#f97316','#64748b','#a78bfa','#38bdf8','#94a3b8','#cbd5e1'];
+new Chart(document.getElementById('categoryChart'), {
+  type:'bar',
+  data:{labels:catKeys,datasets:[{data:catVals,backgroundColor:catColors,borderRadius:4,borderSkipped:false}]},
+  options:{
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'₺'+c.raw.toLocaleString('tr-TR',{maximumFractionDigits:0})}}},
+    scales:{x:{ticks:{callback:v=>'₺'+(v/1000000).toFixed(1)+'M'},grid:{color:'#2a2d3a22'}},y:{grid:{display:false}}}
+  }
+});
+
+// Stacked monthly by channel
+new Chart(document.getElementById('stackedChart'), {
+  type:'bar',
+  data:{
+    labels:months,
+    datasets:[
+      {label:'Offline',data:chMonthly.Offline,backgroundColor:'#6366f1aa',borderRadius:4,borderSkipped:false},
+      {label:'Agency',data:chMonthly.Agency,backgroundColor:'#f59e0baa',borderRadius:4,borderSkipped:false},
+      {label:'Online',data:chMonthly.Online,backgroundColor:'#22c55eaa',borderRadius:4,borderSkipped:false}
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{padding:16,usePointStyle:true,pointStyle:'circle'}},
+    tooltip:{callbacks:{label:c=>c.dataset.label+': ₺'+c.raw.toLocaleString('tr-TR',{maximumFractionDigits:0})}}},
+    scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:v=>'₺'+(v/1000000).toFixed(1)+'M'},grid:{color:'#2a2d3a22'}}}
+  }
+});
+
+// Vendor table
+const gt=8900606.08;
+const tb=document.getElementById('vendorTable');
+vendors.forEach(v=>{
+  const pct=(v.t/gt*100);
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><strong>${v.n}</strong></td><td>${v.cat}</td><td>${v.ch}</td><td class="num">₺${v.t.toLocaleString('tr-TR',{maximumFractionDigits:0})}</td><td><div class="bar-cell"><div class="bar" style="width:${Math.min(pct*2.7,100)}%;background:${v.ch==='Offline'?'#6366f1':v.ch==='Agency'?'#f59e0b':'#22c55e'}"></div><span style="font-size:12px;color:#9ca3af">${pct.toFixed(1)}%</span></div></td>`;
+  tb.appendChild(tr);
+});
+</script>
+</body>
+</html>
